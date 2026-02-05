@@ -1,0 +1,17 @@
+# Large Data & Models
+data/
+*.h5
+*.keras
+*.zip
+*.tar.gz
+
+# Python & Backend
+__pycache__/
+venv/
+.env
+
+# Frontend
+node_modules/
+build/
+dist/
+.DS_Store
