@@ -12,6 +12,7 @@ torchaudio
 numpy
 Pillow
 opencv-python-headless
+scikit-learn
 
 # LLM & Medical NLP
 ollama
