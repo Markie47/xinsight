@@ -1,0 +1,19 @@
+# Web Infrastructure
+fastapi
+uvicorn
+python-multipart
+python-dotenv
+
+# Machine Learning & Vision
+tensorflow
+torch
+torchvision
+torchaudio
+numpy
+Pillow
+opencv-python-headless
+
+# LLM & Medical NLP
+ollama
+huggingface_hub
+requests
