@@ -1,9 +1,18 @@
 import React, { useState, useCallback } from 'react';
-import { Upload as UploadIcon, FileImage, X, Loader, CheckCircle, AlertTriangle } from 'lucide-react';
+import { 
+  Upload as UploadIcon, 
+  FileImage, 
+  X, 
+  Loader, 
+  CheckCircle, 
+  AlertTriangle, 
+  Activity, 
+  Bone 
+} from 'lucide-react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 
-// --- 1. UPDATED INTERFACES ---
+// --- 1. INTERFACES ---
 interface FlaggedCondition {
   condition: string;
   confidence: string;
@@ -20,9 +29,11 @@ interface AnalysisResponse {
   patient_status: string;
   flagged_conditions: FlaggedCondition[];
   medical_validation: MedicalValidation;
-  heatmaps: Record<string, string>; // Maps a disease string to a Base64 string
+  heatmaps: Record<string, string>;
   report_text: string;
 }
+
+type AnalysisMode = 'chest' | 'bone';
 
 export default function Upload() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -31,8 +42,8 @@ export default function Upload() {
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [analysisMode, setAnalysisMode] = useState<AnalysisMode>('chest');
 
-  // Drag and drop handlers
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -81,16 +92,14 @@ export default function Upload() {
     formData.append('file', uploadedFile);
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/predict', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const endpoint = `http://127.0.0.1:8000/${analysisMode}/predict`;
+      const response = await axios.post(endpoint, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-      
       setAnalysis(response.data);
     } catch (err) {
       console.error("Analysis failed:", err);
-      setError("Analysis failed. Please ensure the backend server is running and try again.");
+      setError(`Analysis failed. Please ensure the ${analysisMode} backend is running.`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -101,178 +110,176 @@ export default function Upload() {
     setPreviewUrl(null);
     setAnalysis(null);
     setError(null);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
   };
 
-  // Helper variables for styling based on patient status
   const isAbnormal = analysis?.patient_status === "Abnormal";
   const statusColor = isAbnormal ? "red" : "green";
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Header Section */}
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            X-Ray Analysis Upload
+            X-Insight AI Diagnostic Suite
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Upload your X-ray image for AI-powered analysis. Supports JPG, PNG, and DICOM formats.
+            Diagnostic support for the Class of 2026. Select the scan type to begin.
           </p>
         </div>
 
+        {/* --- Toggle Mode --- */}
+        <div className="flex justify-center mb-10">
+          <div className="bg-white p-1.5 rounded-2xl shadow-sm border flex space-x-1">
+            <button
+              onClick={() => { setAnalysisMode('chest'); setAnalysis(null); }}
+              className={`flex items-center space-x-2 px-8 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                analysisMode === 'chest' 
+                ? 'bg-blue-600 text-white shadow-lg' 
+                : 'text-gray-500 hover:bg-gray-100'
+              }`}
+            >
+              <Activity className="h-4 w-4" />
+              <span>Chest X-Ray</span>
+            </button>
+            <button
+              onClick={() => { setAnalysisMode('bone'); setAnalysis(null); }}
+              className={`flex items-center space-x-2 px-8 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                analysisMode === 'bone' 
+                ? 'bg-blue-600 text-white shadow-lg' 
+                : 'text-gray-500 hover:bg-gray-100'
+              }`}
+            >
+              <Bone className="h-4 w-4" />
+              <span>Skeletal X-Ray</span>
+            </button>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* ========================================== */}
-          {/* LEFT COLUMN: UPLOAD & HEATMAPS             */}
-          {/* ========================================== */}
-          <div className="bg-white rounded-xl shadow-lg p-8 h-fit">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Upload X-Ray Image</h2>
+          
+          {/* LEFT COLUMN */}
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
+              <UploadIcon className="h-6 w-6 text-blue-600" />
+              <span>Image Upload</span>
+            </h2>
             
             {!uploadedFile ? (
               <div
-                className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors duration-200 ${
-                  dragActive 
-                    ? 'border-blue-400 bg-blue-50' 
-                    : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+                className={`border-2 border-dashed rounded-xl p-16 text-center transition-all duration-300 ${
+                  dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-400'
                 }`}
                 onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
               >
-                <FileImage className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-xl font-medium text-gray-700 mb-2">Drop your X-ray image here</p>
-                <p className="text-gray-500 mb-6">or click to browse files</p>
-                <label className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 cursor-pointer inline-flex items-center space-x-2">
+                <FileImage className="h-20 w-20 text-gray-300 mx-auto mb-6" />
+                <p className="text-xl font-semibold text-gray-700">Drop your X-ray here</p>
+                <label className="mt-8 bg-blue-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-blue-700 cursor-pointer inline-flex items-center space-x-3">
                   <UploadIcon className="h-5 w-5" />
                   <span>Choose File</span>
-                  <input
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.dcm"
-                    onChange={handleFileInputChange}
-                    className="hidden"
-                  />
+                  <input type="file" accept=".jpg,.jpeg,.png,.dcm" onChange={handleFileInputChange} className="hidden" />
                 </label>
               </div>
             ) : (
-              <div className="space-y-6">
-                {/* Original Image Preview */}
-                <div className="relative">
-                  <img src={previewUrl!} alt="Uploaded X-ray" className="w-full h-80 object-contain bg-black rounded-lg" />
-                  <button onClick={clearUpload} className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors duration-200">
-                    <X className="h-4 w-4" />
+              <div className="space-y-8">
+                <div className="relative group">
+                  <img src={previewUrl!} alt="Preview" className="w-full h-96 object-contain bg-black rounded-xl shadow-inner" />
+                  <button onClick={clearUpload} className="absolute top-4 right-4 bg-red-500 text-white p-3 rounded-full hover:bg-red-600 shadow-lg">
+                    <X className="h-5 w-5" />
                   </button>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-gray-900">{uploadedFile.name}</p>
-                    <p className="text-sm text-gray-500">{(uploadedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border">
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-3 rounded-lg ${analysisMode === 'chest' ? 'bg-blue-100 text-blue-600' : 'bg-indigo-100 text-indigo-600'}`}>
+                      {analysisMode === 'chest' ? <Activity className="h-6 w-6" /> : <Bone className="h-6 w-6" />}
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-gray-400 uppercase">Target Engine</p>
+                      <p className="font-bold text-gray-900">{analysisMode === 'chest' ? 'Chest-Net' : 'Bone-Net'}</p>
+                    </div>
                   </div>
                   
                   {!analysis && !isAnalyzing && (
                     <button
                       onClick={handleAnalysis}
-                      className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2"
+                      className="bg-green-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-green-700 shadow-lg flex items-center space-x-3"
                     >
-                      <UploadIcon className="h-5 w-5" />
-                      <span>Analyze X-Ray</span>
+                      <Activity className="h-5 w-5" />
+                      <span>Analyze Scan</span>
                     </button>
                   )}
                 </div>
                 
                 {isAnalyzing && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                    <Loader className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-                    <p className="text-blue-800 font-medium">Analyzing X-ray image...</p>
-                    <p className="text-blue-600 text-sm mt-2">Evaluating multi-label pathologies...</p>
+                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-8 text-center animate-pulse">
+                    <Loader className="h-10 w-10 animate-spin text-blue-600 mx-auto mb-4" />
+                    <p className="text-blue-900 font-bold">Processing {analysisMode} findings...</p>
                   </div>
                 )}
 
-                {/* --- SHIFTED HEATMAP GALLERY --- */}
-                {/* Now renders directly below the uploaded image in the left column */}
+                {/* Heatmaps */}
                 {analysis && Object.keys(analysis.heatmaps).length > 0 && (
-                  <div className="mt-8 pt-6 border-t border-gray-100">
-                    <h3 className="font-semibold text-gray-900 mb-4">Diagnostic Heatmaps</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {Object.entries(analysis.heatmaps).map(([diseaseName, base64String], index) => (
-                        <div key={index} className="flex flex-col space-y-2 bg-gray-50 p-3 rounded-lg border">
-                          <span className="text-sm font-bold text-gray-800 text-center uppercase tracking-wide">
-                            {diseaseName}
-                          </span>
-                          <img 
-                            src={base64String} 
-                            alt={`Heatmap for ${diseaseName}`} 
-                            className="w-full object-contain bg-black rounded shadow-sm" 
-                          />
+                  <div className="pt-8 border-t border-gray-100">
+                    <h3 className="text-lg font-bold text-gray-900 mb-6">Pathology Heatmaps</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {Object.entries(analysis.heatmaps).map(([name, b64], idx) => (
+                        <div key={idx} className="bg-gray-50 p-4 rounded-xl border">
+                          <span className="block text-center text-xs font-black text-gray-500 mb-3 uppercase tracking-widest">{name}</span>
+                          <img src={b64} alt={name} className="w-full rounded-lg shadow-sm bg-black" />
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
-
               </div>
             )}
           </div>
 
-          {/* ========================================== */}
-          {/* RIGHT COLUMN: CLINICAL REPORT & STATUS     */}
-          {/* ========================================== */}
-          <div className="bg-white rounded-xl shadow-lg p-8 h-fit">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Analysis Results</h2>
+          {/* RIGHT COLUMN */}
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 h-fit">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              <span>Results</span>
+            </h2>
             
-            {!analysis && !isAnalyzing && (
-              <div className="text-center py-12">
-                <FileImage className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">Upload and analyze an X-ray to see results</p>
-              </div>
-            )}
-
-            {analysis && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    {isAbnormal ? (
-                      <AlertTriangle className="h-6 w-6 text-red-600" />
-                    ) : (
-                      <CheckCircle className="h-6 w-6 text-green-600" />
-                    )}
-                    <span className="font-semibold text-gray-900">Analysis Complete</span>
+            {analysis ? (
+              <div className="space-y-8">
+                <div className="flex items-center justify-between border-b pb-4">
+                  <div className="flex items-center space-x-3">
+                    {isAbnormal ? <AlertTriangle className="h-6 w-6 text-red-500" /> : <CheckCircle className="h-6 w-6 text-green-500" />}
+                    <span className="font-bold text-gray-800">Validation: Complete</span>
                   </div>
-                  <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                    BioBERT Match: {analysis.medical_validation.match_category} ({(analysis.medical_validation.semantic_score * 100).toFixed(1)}%)
+                  <div className="text-[10px] font-black bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full uppercase border border-blue-100">
+                    {analysis.medical_validation.match_category}
                   </div>
                 </div>
                 
-                {/* --- MULTI-LABEL STATUS BANNER --- */}
-                <div className={`bg-${statusColor}-50 border border-${statusColor}-200 rounded-lg p-4`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className={`font-medium text-${statusColor}-800`}>Patient Status</span>
-                    <span className={`text-2xl font-bold text-${statusColor}-600 uppercase`}>
-                      {analysis.patient_status}
-                    </span>
+                <div className={`bg-${statusColor}-50 border-2 border-${statusColor}-100 rounded-2xl p-6`}>
+                  <div className="flex items-center justify-between mb-6">
+                    <span className={`text-sm font-black text-${statusColor}-800 uppercase tracking-widest`}>Patient Status</span>
+                    <span className={`text-3xl font-black text-${statusColor}-600`}>{analysis.patient_status}</span>
                   </div>
-                  
                   <div className="flex flex-wrap gap-2">
                     {analysis.flagged_conditions.map((item, idx) => (
-                      <span key={idx} className={`px-3 py-1 bg-${statusColor}-100 text-${statusColor}-800 rounded-full text-sm font-medium border border-${statusColor}-300`}>
-                        {item.condition} <span className="opacity-75">({item.confidence})</span>
-                      </span>
+                      <div key={idx} className="px-4 py-2 bg-white text-gray-800 rounded-xl text-sm font-bold shadow-sm border">
+                        {item.condition} <span className="text-xs text-gray-400">({item.confidence})</span>
+                      </div>
                     ))}
                   </div>
                 </div>
 
-                {/* --- LLM REPORT --- */}
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">Synthesized Clinical Report</h3>
-                  <div className="bg-gray-50 rounded-lg p-5 border text-gray-800 text-sm leading-relaxed shadow-inner">
+                <div className="space-y-4">
+                  <h3 className="font-bold text-gray-900 text-lg">Radiology Report</h3>
+                  <div className="bg-gray-900 text-gray-100 rounded-2xl p-6 text-sm font-mono border-l-4 border-blue-500 overflow-y-auto max-h-[500px]">
                     <ReactMarkdown 
                       components={{
-                        strong: ({node, ...props}) => <strong className="font-bold text-gray-900" {...props} />,
-                        h1: ({node, ...props}) => <h1 className="text-xl font-bold mt-4 mb-2" {...props} />,
-                        h2: ({node, ...props}) => <h2 className="text-lg font-bold mt-4 mb-2 text-gray-900" {...props} />,
-                        h3: ({node, ...props}) => <h3 className="text-md font-bold mt-3 mb-1" {...props} />,
-                        p: ({node, ...props}) => <p className="mb-3" {...props} />,
-                        ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-3 space-y-1" {...props} />,
-                        li: ({node, ...props}) => <li {...props} />
+                        h1: ({...props}) => <h1 className="text-xl font-bold text-blue-400 mb-4" {...props} />,
+                        h2: ({...props}) => <h2 className="text-lg font-bold text-blue-300 mt-6 mb-3" {...props} />,
+                        p: ({...props}) => <p className="mb-4 text-gray-300" {...props} />,
+                        ul: ({...props}) => <ul className="list-disc pl-6 mb-4" {...props} />,
                       }}
                     >
                       {analysis.report_text}
@@ -280,15 +287,16 @@ export default function Upload() {
                   </div>
                 </div>
               </div>
+            ) : (
+              <div className="text-center py-24 text-gray-400 italic">
+                Awaiting {analysisMode} X-ray analysis...
+              </div>
             )}
             
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg mt-6">
-                <p className="font-bold flex items-center space-x-2">
-                  <AlertTriangle className="h-5 w-5" />
-                  <span>An Error Occurred</span>
-                </p>
-                <p className="mt-1 text-sm">{error}</p>
+              <div className="bg-red-600 text-white p-6 rounded-2xl mt-8 shadow-xl flex items-start space-x-4">
+                <AlertTriangle className="h-6 w-6 flex-shrink-0" />
+                <p className="font-medium text-sm">{error}</p>
               </div>
             )}
           </div>
