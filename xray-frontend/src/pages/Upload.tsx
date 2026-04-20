@@ -31,9 +31,8 @@ interface AnalysisResponse {
   medical_validation: MedicalValidation;
   heatmaps: Record<string, string>;
   report_text: string;
+  scan_type_detected?: string; // Catch the Gatekeeper's routing decision
 }
-
-type AnalysisMode = 'chest' | 'bone';
 
 export default function Upload() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -42,7 +41,6 @@ export default function Upload() {
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [analysisMode, setAnalysisMode] = useState<AnalysisMode>('chest');
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -92,14 +90,15 @@ export default function Upload() {
     formData.append('file', uploadedFile);
 
     try {
-      const endpoint = `http://127.0.0.1:8000/${analysisMode}/predict`;
+      // Hit the new Gatekeeper endpoint
+      const endpoint = `http://127.0.0.1:8000/smart-predict`;
       const response = await axios.post(endpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setAnalysis(response.data);
     } catch (err) {
       console.error("Analysis failed:", err);
-      setError(`Analysis failed. Please ensure the ${analysisMode} backend is running.`);
+      setError(`Analysis failed. Please ensure the backend is running.`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -126,36 +125,8 @@ export default function Upload() {
             X-Insight AI Diagnostic Suite
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Diagnostic support for the Class of 2026. Select the scan type to begin.
+            Diagnostic support for the Class of 2026. Upload your scan to begin.
           </p>
-        </div>
-
-        {/* --- Toggle Mode --- */}
-        <div className="flex justify-center mb-10">
-          <div className="bg-white p-1.5 rounded-2xl shadow-sm border flex space-x-1">
-            <button
-              onClick={() => { setAnalysisMode('chest'); setAnalysis(null); }}
-              className={`flex items-center space-x-2 px-8 py-3 rounded-xl font-semibold transition-all duration-300 ${
-                analysisMode === 'chest' 
-                ? 'bg-blue-600 text-white shadow-lg' 
-                : 'text-gray-500 hover:bg-gray-100'
-              }`}
-            >
-              <Activity className="h-4 w-4" />
-              <span>Chest X-Ray</span>
-            </button>
-            <button
-              onClick={() => { setAnalysisMode('bone'); setAnalysis(null); }}
-              className={`flex items-center space-x-2 px-8 py-3 rounded-xl font-semibold transition-all duration-300 ${
-                analysisMode === 'bone' 
-                ? 'bg-blue-600 text-white shadow-lg' 
-                : 'text-gray-500 hover:bg-gray-100'
-              }`}
-            >
-              <Bone className="h-4 w-4" />
-              <span>Skeletal X-Ray</span>
-            </button>
-          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -193,12 +164,16 @@ export default function Upload() {
                 
                 <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border">
                   <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-lg ${analysisMode === 'chest' ? 'bg-blue-100 text-blue-600' : 'bg-indigo-100 text-indigo-600'}`}>
-                      {analysisMode === 'chest' ? <Activity className="h-6 w-6" /> : <Bone className="h-6 w-6" />}
+                    <div className={`p-3 rounded-lg ${analysis?.scan_type_detected === 'bone' ? 'bg-indigo-100 text-indigo-600' : 'bg-blue-100 text-blue-600'}`}>
+                      {analysis?.scan_type_detected === 'bone' ? <Bone className="h-6 w-6" /> : <Activity className="h-6 w-6" />}
                     </div>
                     <div>
                       <p className="text-xs font-black text-gray-400 uppercase">Target Engine</p>
-                      <p className="font-bold text-gray-900">{analysisMode === 'chest' ? 'Chest-Net' : 'Bone-Net'}</p>
+                      <p className="font-bold text-gray-900">
+                        {!analysis && !isAnalyzing ? 'Auto-Detect Ready' : 
+                         isAnalyzing ? 'Routing Scan...' :
+                         analysis?.scan_type_detected === 'chest' ? 'Chest-Net' : 'Bone-Net'}
+                      </p>
                     </div>
                   </div>
                   
@@ -216,7 +191,7 @@ export default function Upload() {
                 {isAnalyzing && (
                   <div className="bg-blue-50 border border-blue-100 rounded-xl p-8 text-center animate-pulse">
                     <Loader className="h-10 w-10 animate-spin text-blue-600 mx-auto mb-4" />
-                    <p className="text-blue-900 font-bold">Processing {analysisMode} findings...</p>
+                    <p className="text-blue-900 font-bold">Processing scan and synthesizing findings...</p>
                   </div>
                 )}
 
@@ -289,7 +264,7 @@ export default function Upload() {
               </div>
             ) : (
               <div className="text-center py-24 text-gray-400 italic">
-                Awaiting {analysisMode} X-ray analysis...
+                Awaiting X-ray upload and analysis...
               </div>
             )}
             
