@@ -90,7 +90,7 @@ export default function Upload() {
     formData.append('file', uploadedFile);
 
     try {
-      // Hit the new Gatekeeper endpoint
+      // Hit the Gatekeeper endpoint
       const endpoint = `http://127.0.0.1:8000/smart-predict`;
       const response = await axios.post(endpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -113,7 +113,6 @@ export default function Upload() {
   };
 
   const isAbnormal = analysis?.patient_status === "Abnormal";
-  const statusColor = isAbnormal ? "red" : "green";
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -131,7 +130,7 @@ export default function Upload() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
-          {/* LEFT COLUMN */}
+          {/* LEFT COLUMN: Upload & Heatmaps */}
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
               <UploadIcon className="h-6 w-6 text-blue-600" />
@@ -195,7 +194,7 @@ export default function Upload() {
                   </div>
                 )}
 
-                {/* Heatmaps */}
+                {/* Heatmaps: Fixed Base64 Prefixing logic */}
                 {analysis && Object.keys(analysis.heatmaps).length > 0 && (
                   <div className="pt-8 border-t border-gray-100">
                     <h3 className="text-lg font-bold text-gray-900 mb-6">Pathology Heatmaps</h3>
@@ -203,7 +202,11 @@ export default function Upload() {
                       {Object.entries(analysis.heatmaps).map(([name, b64], idx) => (
                         <div key={idx} className="bg-gray-50 p-4 rounded-xl border">
                           <span className="block text-center text-xs font-black text-gray-500 mb-3 uppercase tracking-widest">{name}</span>
-                          <img src={b64} alt={name} className="w-full rounded-lg shadow-sm bg-black" />
+                          <img 
+                            src={b64.startsWith('data:') ? b64 : `data:image/png;base64,${b64}`} 
+                            alt={name} 
+                            className="w-full rounded-lg shadow-sm bg-black" 
+                          />
                         </div>
                       ))}
                     </div>
@@ -213,7 +216,7 @@ export default function Upload() {
             )}
           </div>
 
-          {/* RIGHT COLUMN */}
+          {/* RIGHT COLUMN: Results & Reports */}
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 h-fit">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
               <CheckCircle className="h-6 w-6 text-green-600" />
@@ -232,10 +235,17 @@ export default function Upload() {
                   </div>
                 </div>
                 
-                <div className={`bg-${statusColor}-50 border-2 border-${statusColor}-100 rounded-2xl p-6`}>
+                {/* Fixed Dynamic Colors */}
+                <div className={`rounded-2xl p-6 border-2 ${
+                  isAbnormal ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'
+                }`}>
                   <div className="flex items-center justify-between mb-6">
-                    <span className={`text-sm font-black text-${statusColor}-800 uppercase tracking-widest`}>Patient Status</span>
-                    <span className={`text-3xl font-black text-${statusColor}-600`}>{analysis.patient_status}</span>
+                    <span className={`text-sm font-black uppercase tracking-widest ${
+                      isAbnormal ? 'text-red-800' : 'text-green-800'
+                    }`}>Patient Status</span>
+                    <span className={`text-3xl font-black ${
+                      isAbnormal ? 'text-red-600' : 'text-green-600'
+                    }`}>{analysis.patient_status}</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {analysis.flagged_conditions.map((item, idx) => (
