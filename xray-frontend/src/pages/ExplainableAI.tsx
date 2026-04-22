@@ -32,54 +32,58 @@ export default function ExplainableAI() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 py-12 relative overflow-hidden">
+      {/* Background blobs for depth */}
+      <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-blue-100/40 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-indigo-50/40 blur-3xl pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-16 pt-8">
           <div className="flex justify-center mb-6">
-            <div className="bg-blue-100 p-4 rounded-full">
-              <Brain className="h-12 w-12 text-blue-600" />
+            <div className="bg-white p-4 justify-center items-center rounded-2xl shadow-sm border border-slate-100 inline-flex">
+              <Brain className="h-10 w-10 text-blue-600" />
             </div>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-3xl md:text-5xl font-extrabold text-indigo-900 mb-6 tracking-tight">
             Explainable AI in Medical Imaging
           </h1>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-slate-600 font-medium max-w-3xl mx-auto leading-relaxed">
             Understanding how AI makes diagnostic decisions through visual explanations, 
             attention maps, and transparent reasoning processes.
           </p>
         </div>
 
         {/* AI Transparency Importance */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        <div className="bg-white rounded-xl shadow-md border border-slate-100 p-8 sm:p-10 mb-12 hover:shadow-lg transition-shadow duration-300">
+          <h2 className="text-2xl font-bold text-indigo-900 mb-8 border-b border-slate-100 pb-4">
             Why Explainable AI Matters in Healthcare
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="bg-blue-100 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Eye className="h-8 w-8 text-blue-600" />
+            <div className="text-center group">
+              <div className="bg-slate-50 border border-slate-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300">
+                <Eye className="h-7 w-7 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Clinical Trust</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg font-bold text-indigo-900 mb-3">Clinical Trust</h3>
+              <p className="text-slate-600 font-medium leading-relaxed">
                 Healthcare professionals need to understand AI reasoning to trust and validate diagnostic decisions.
               </p>
             </div>
-            <div className="text-center">
-              <div className="bg-green-100 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Target className="h-8 w-8 text-green-600" />
+            <div className="text-center group">
+              <div className="bg-slate-50 border border-slate-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300">
+                <Target className="h-7 w-7 text-emerald-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Diagnostic Accuracy</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg font-bold text-indigo-900 mb-3">Diagnostic Accuracy</h3>
+              <p className="text-slate-600 font-medium leading-relaxed">
                 Visual explanations help identify if the AI is focusing on clinically relevant regions.
               </p>
             </div>
-            <div className="text-center">
-              <div className="bg-purple-100 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Layers className="h-8 w-8 text-purple-600" />
+            <div className="text-center group">
+              <div className="bg-slate-50 border border-slate-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300">
+                <Layers className="h-7 w-7 text-purple-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Learning Tool</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg font-bold text-indigo-900 mb-3">Learning Tool</h3>
+              <p className="text-slate-600 font-medium leading-relaxed">
                 Explainable AI serves as an educational resource for medical training and continuous learning.
               </p>
             </div>
@@ -87,21 +91,21 @@ export default function ExplainableAI() {
         </div>
 
         {/* Interactive Examples */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        <div className="bg-white rounded-xl shadow-md border border-slate-100 p-8 sm:p-10 mb-12 hover:shadow-lg transition-shadow duration-300">
+          <h2 className="text-2xl font-bold text-indigo-900 mb-8 border-b border-slate-100 pb-4">
             Interactive AI Explanation Examples
           </h2>
           
           {/* Example Selector */}
-          <div className="flex flex-wrap gap-2 mb-8">
+          <div className="flex flex-wrap gap-3 mb-8">
             {examples.map((example, index) => (
               <button
                 key={index}
                 onClick={() => setSelectedExample(index)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 shadow-sm ${
                   selectedExample === index
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-blue-600 text-white shadow-md scale-105'
+                    : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-white hover:border-blue-300 hover:text-blue-600'
                 }`}
               >
                 {example.title}
@@ -109,60 +113,59 @@ export default function ExplainableAI() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             {/* Image and Heatmap */}
             <div className="space-y-6">
-              <div className="relative">
+              <div className="relative overflow-hidden rounded-xl shadow-md border border-slate-200 group">
                 <img
                   src={examples[selectedExample].image}
                   alt={examples[selectedExample].title}
-                  className="w-full h-80 object-cover rounded-lg bg-black"
+                  className="w-full h-[400px] object-cover bg-slate-900 group-hover:scale-105 transition-transform duration-700"
                 />
-                {/* Simulated attention heatmap overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-yellow-500/30 to-transparent rounded-lg pointer-events-none" />
-                <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-1 rounded-lg text-sm">
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-amber-500/30 to-transparent pointer-events-none" />
+                <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow-sm border border-white/10">
                   Attention Heatmap
                 </div>
               </div>
               
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">Heatmap Legend</h4>
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-red-500 rounded"></div>
-                    <span className="text-sm text-gray-600">High attention</span>
+              <div className="bg-slate-50 border border-slate-100 rounded-xl p-5 shadow-sm">
+                <h4 className="font-bold text-indigo-900 mb-3 text-sm uppercase tracking-wider">Heatmap Legend</h4>
+                <div className="flex items-center space-x-6">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="w-4 h-4 bg-red-500 rounded-md shadow-sm"></div>
+                    <span className="text-sm font-medium text-slate-700">High attention</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-                    <span className="text-sm text-gray-600">Medium attention</span>
+                  <div className="flex items-center space-x-2.5">
+                    <div className="w-4 h-4 bg-amber-500 rounded-md shadow-sm"></div>
+                    <span className="text-sm font-medium text-slate-700">Medium attention</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-gray-300 rounded"></div>
-                    <span className="text-sm text-gray-600">Low attention</span>
+                  <div className="flex items-center space-x-2.5">
+                    <div className="w-4 h-4 bg-slate-300 rounded-md shadow-sm"></div>
+                    <span className="text-sm font-medium text-slate-700">Low attention</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Analysis Details */}
-            <div className="space-y-6">
+            <div className="space-y-6 bg-slate-50/50 p-6 sm:p-8 rounded-xl border border-slate-100">
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-gray-900">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-4">
+                  <h3 className="text-2xl font-bold text-indigo-900 leading-tight">
                     {examples[selectedExample].condition}
                   </h3>
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="h-5 w-5 text-green-600" />
-                    <span className="text-lg font-bold text-green-600">
+                  <div className="flex items-center space-x-2 bg-emerald-50 px-4 py-2 rounded-lg border border-emerald-100 shadow-sm">
+                    <TrendingUp className="h-5 w-5 text-emerald-600" />
+                    <span className="text-lg font-extrabold text-emerald-600">
                       {examples[selectedExample].confidence}%
                     </span>
                   </div>
                 </div>
                 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                  <div className="flex items-start space-x-2">
-                    <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <p className="text-blue-800 text-sm">
+                <div className="bg-white border text-slate-600 border-slate-200 shadow-sm rounded-xl p-5 mb-8 transition-all hover:border-blue-200">
+                  <div className="flex items-start space-x-3">
+                    <AlertCircle className="h-6 w-6 text-blue-600 flex-shrink-0" />
+                    <p className="font-medium text-slate-700 leading-relaxed">
                       {examples[selectedExample].explanation}
                     </p>
                   </div>
@@ -170,45 +173,45 @@ export default function ExplainableAI() {
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3">Key Features Analyzed</h4>
-                <div className="space-y-2">
+                <h4 className="font-bold text-indigo-900 mb-4 text-sm uppercase tracking-wider">Key Features Analyzed</h4>
+                <div className="space-y-3">
                   {examples[selectedExample].keyFeatures.map((feature, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                      <span className="text-gray-700">{feature}</span>
+                    <div key={index} className="flex items-center space-x-3 bg-white border border-slate-100 p-3 rounded-lg shadow-sm">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0"></div>
+                      <span className="text-slate-700 font-medium">{feature}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="border-t pt-6">
-                <h4 className="font-semibold text-gray-900 mb-3">Model Confidence Breakdown</h4>
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600">Feature Detection</span>
-                      <span className="text-gray-900">94%</span>
+              <div className="pt-6 mt-6 border-t border-slate-200">
+                <h4 className="font-bold text-indigo-900 mb-5 text-sm uppercase tracking-wider">Model Confidence Breakdown</h4>
+                <div className="space-y-5">
+                  <div className="group">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-slate-600 font-medium group-hover:text-blue-600 transition-colors">Feature Detection</span>
+                      <span className="text-slate-900 font-bold">94%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-600 h-2 rounded-full" style={{width: '94%'}}></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600">Pattern Recognition</span>
-                      <span className="text-gray-900">89%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-green-600 h-2 rounded-full" style={{width: '89%'}}></div>
+                    <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                      <div className="bg-blue-600 h-2.5 rounded-full" style={{width: '94%'}}></div>
                     </div>
                   </div>
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600">Contextual Analysis</span>
-                      <span className="text-gray-900">91%</span>
+                  <div className="group">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-slate-600 font-medium group-hover:text-emerald-600 transition-colors">Pattern Recognition</span>
+                      <span className="text-slate-900 font-bold">89%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-purple-600 h-2 rounded-full" style={{width: '91%'}}></div>
+                    <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                      <div className="bg-emerald-600 h-2.5 rounded-full" style={{width: '89%'}}></div>
+                    </div>
+                  </div>
+                  <div className="group">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-slate-600 font-medium group-hover:text-purple-600 transition-colors">Contextual Analysis</span>
+                      <span className="text-slate-900 font-bold">91%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                      <div className="bg-purple-600 h-2.5 rounded-full" style={{width: '91%'}}></div>
                     </div>
                   </div>
                 </div>
@@ -218,50 +221,50 @@ export default function ExplainableAI() {
         </div>
 
         {/* Technical Details */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mt-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        <div className="bg-white rounded-xl shadow-md border border-slate-100 p-8 sm:p-10 hover:shadow-lg transition-shadow duration-300 mb-12">
+          <h2 className="text-2xl font-bold text-indigo-900 mb-8 border-b border-slate-100 pb-4">
             How Our Explainable AI Works
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Grad-CAM Visualization</h3>
-              <p className="text-gray-600 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
+              <h3 className="text-xl font-bold text-indigo-900 mb-4">Grad-CAM Visualization</h3>
+              <p className="text-slate-600 font-medium leading-relaxed mb-6">
                 Our system uses Gradient-weighted Class Activation Mapping (Grad-CAM) to highlight 
                 the regions in the X-ray image that were most important for the AI's diagnostic decision.
               </p>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li className="flex items-start space-x-2">
-                  <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+              <ul className="space-y-3 font-medium text-slate-700">
+                <li className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0 shadow-sm"></div>
                   <span>Generates visual explanations for deep learning models</span>
                 </li>
-                <li className="flex items-start space-x-2">
-                  <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+                <li className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0 shadow-sm"></div>
                   <span>Highlights discriminative regions without architectural changes</span>
                 </li>
-                <li className="flex items-start space-x-2">
-                  <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+                <li className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0 shadow-sm"></div>
                   <span>Provides class-specific visualizations</span>
                 </li>
               </ul>
             </div>
             
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Attention Mechanisms</h3>
-              <p className="text-gray-600 mb-4">
+            <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
+              <h3 className="text-xl font-bold text-indigo-900 mb-4">Attention Mechanisms</h3>
+              <p className="text-slate-600 font-medium leading-relaxed mb-6">
                 Our neural network architecture incorporates attention mechanisms that automatically 
                 focus on clinically relevant anatomical structures and pathological features.
               </p>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li className="flex items-start space-x-2">
-                  <div className="w-1.5 h-1.5 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
+              <ul className="space-y-3 font-medium text-slate-700">
+                <li className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-emerald-600 rounded-full mt-2 flex-shrink-0 shadow-sm"></div>
                   <span>Self-attention for spatial feature relationships</span>
                 </li>
-                <li className="flex items-start space-x-2">
-                  <div className="w-1.5 h-1.5 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
+                <li className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-emerald-600 rounded-full mt-2 flex-shrink-0 shadow-sm"></div>
                   <span>Multi-scale attention for different pathology sizes</span>
                 </li>
-                <li className="flex items-start space-x-2">
-                  <div className="w-1.5 h-1.5 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
+                <li className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-emerald-600 rounded-full mt-2 flex-shrink-0 shadow-sm"></div>
                   <span>Channel attention for feature importance weighting</span>
                 </li>
               </ul>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Activity, Menu, X, User, LogOut } from 'lucide-react';
+import { Activity, Menu, X, User as UserIcon, LogOut } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function Navbar() {
@@ -19,22 +19,12 @@ export default function Navbar() {
   const navLinks = [
     { path: '/', label: 'Home' },
     { path: '/upload', label: 'Upload X-Ray' },
-    { path: '/explainable-ai', label: 'Explainable AI' },
-    { path: '/information', label: 'Learn More' },
   ];
 
+  // The newly simplified portal link logic
   const getPortalLink = () => {
     if (!user) return null;
-    switch (user.role) {
-      case 'patient':
-        return { path: '/patient-portal', label: 'Patient Portal' };
-      case 'doctor':
-        return { path: '/doctor-portal', label: 'Doctor Portal' };
-      case 'admin':
-        return { path: '/admin-dashboard', label: 'Admin Dashboard' };
-      default:
-        return null;
-    }
+    return { path: '/dashboard', label: 'Dashboard' };
   };
 
   const portalLink = getPortalLink();
@@ -87,7 +77,7 @@ export default function Navbar() {
                   {user?.avatar ? (
                     <img src={user.avatar} alt={user.name} className="h-8 w-8 rounded-full" />
                   ) : (
-                    <User className="h-5 w-5" />
+                    <UserIcon className="h-5 w-5" />
                   )}
                   <span className="text-sm font-medium">{user?.name}</span>
                 </button>
@@ -96,7 +86,7 @@ export default function Navbar() {
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 z-50">
                     <div className="px-4 py-2 border-b">
                       <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                      <p className="text-sm text-gray-500 capitalize">{user?.role}</p>
+                      {/* Old role paragraph removed from here */}
                     </div>
                     <button
                       onClick={handleLogout}
@@ -165,7 +155,7 @@ export default function Navbar() {
               <div className="border-t pt-2">
                 <div className="px-3 py-2">
                   <p className="text-base font-medium text-gray-900">{user?.name}</p>
-                  <p className="text-sm text-gray-500 capitalize">{user?.role}</p>
+                  {/* Old role paragraph removed from here */}
                 </div>
                 <button
                   onClick={handleLogout}

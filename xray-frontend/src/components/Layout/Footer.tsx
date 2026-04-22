@@ -1,5 +1,6 @@
 import React from 'react';
 import { Activity, Mail, Phone, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function Footer() {
   return (
@@ -19,11 +20,11 @@ export default function Footer() {
             <div className="flex space-x-4">
               <div className="flex items-center space-x-2 text-gray-300">
                 <Phone className="h-4 w-4" />
-                <span className="text-sm">+1 (555) 123-4567</span>
+                <span className="text-sm">+91 9972356748</span>
               </div>
               <div className="flex items-center space-x-2 text-gray-300">
                 <Mail className="h-4 w-4" />
-                <span className="text-sm">contact@x-insight.com</span>
+                <span className="text-sm">crce@gmail.com</span>
               </div>
             </div>
           </div>
@@ -31,35 +32,24 @@ export default function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">Platform</h3>
             <ul className="space-y-2">
-              <li><a href="/upload" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">Upload X-Ray</a></li>
-              <li><a href="/explainable-ai" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">Explainable AI</a></li>
-              <li><a href="/information" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">Information</a></li>
-              <li><a href="/login" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">Login</a></li>
+              <li><Link to="/upload" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">Upload X-Ray</Link></li>
+              <li><Link to="/history" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">Patient History</Link></li>
+              <li><Link to="/information" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">Learn More</Link></li>
             </ul>
           </div>
           
           <div>
             <h3 className="text-lg font-semibold mb-4">Legal & Privacy</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">Privacy Policy</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">HIPAA Compliance</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">Terms of Service</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">Data Security</a></li>
+              <li><Link to="/privacy" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">Privacy Policy</Link></li>
+              <li><Link to="/hipaa" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">HIPAA Compliance</Link></li>
+              <li><Link to="/terms" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">Terms of Service</Link></li>
+              <li><Link to="/data-security" className="text-gray-300 hover:text-blue-400 transition-colors duration-200">Data Security</Link></li>
             </ul>
           </div>
         </div>
         
-        <div className="border-t border-gray-800 mt-8 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm">
-              © 2025 X-Insight. All rights reserved. HIPAA & GDPR Compliant.
-            </p>
-            <div className="flex items-center space-x-2 text-gray-400 text-sm mt-4 md:mt-0">
-              <MapPin className="h-4 w-4" />
-              <span>Healthcare Innovation Center, Medical District</span>
-            </div>
-          </div>
-        </div>
+        
       </div>
     </footer>
   );

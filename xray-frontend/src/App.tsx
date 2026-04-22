@@ -6,11 +6,13 @@ import Footer from './components/Layout/Footer'
 import Home from './pages/Home';
 import Upload from './pages/Upload';
 import Login from './pages/Login';
-import ExplainableAI from './pages/ExplainableAI';
 import Information from './pages/Information';
-import PatientPortal from './pages/PatientPortal';
-import DoctorPortal from './pages/DoctorPortal';
-import AdminDashboard from './pages/AdminDashboard';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
+import DataSecurity from './pages/DataSecurity';
+import HIPAA from './pages/HIPAA';
+import Dashboard from './components/Dashboard';
+import History from './pages/History';
 
 function App() {
   return (
@@ -23,11 +25,13 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/upload" element={<Upload />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/explainable-ai" element={<ExplainableAI />} />
               <Route path="/information" element={<Information />} />
-              <Route path="/patient-portal" element={<PatientPortal />} />
-              <Route path="/doctor-portal" element={<DoctorPortal />} />
-              <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/data-security" element={<DataSecurity />} />
+              <Route path="/hipaa" element={<HIPAA />} />
+              <Route path="/history" element={<Dashboard />} />
+              <Route path="/history" element={<History />} />
             </Routes>
           </main>
           <Footer />

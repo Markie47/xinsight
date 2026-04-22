@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Activity, Mail, Lock, User, Stethoscope, Shield } from 'lucide-react';
+import { Activity, Mail, Lock, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'patient' | 'doctor' | 'admin'>('patient');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuth();
@@ -18,20 +17,10 @@ export default function Login() {
     setError('');
 
     try {
-      const success = await login(email, password, role);
+      const success = await login(email, password); 
+      
       if (success) {
-        // Redirect based on role
-        switch (role) {
-          case 'patient':
-            navigate('/patient-portal');
-            break;
-          case 'doctor':
-            navigate('/doctor-portal');
-            break;
-          case 'admin':
-            navigate('/admin-dashboard');
-            break;
-        }
+        navigate('/dashboard');
       } else {
         setError('Invalid credentials. Please try again.');
       }
@@ -43,35 +32,47 @@ export default function Login() {
   };
 
   const demoCredentials = [
-    { role: 'patient', email: 'patient@xinsight.com', icon: User, color: 'blue' },
-    { role: 'doctor', email: 'doctor@xinsight.com', icon: Stethoscope, color: 'green' },
-    { role: 'admin', email: 'admin@xinsight.com', icon: Shield, color: 'purple' },
+    { role: 'Demo User', email: 'user@xinsight.com', icon: User }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <div className="flex justify-center">
-            <Activity className="h-12 w-12 text-blue-600" />
-          </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to X-Insight
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Access your medical imaging analysis portal
-          </p>
+    <div className="min-h-screen bg-slate-50 flex flex-col relative">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-md border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="p-1.5 bg-blue-600 rounded-lg group-hover:bg-blue-700 transition-colors">
+              <Activity className="h-5 w-5 text-white" />
+            </div>
+            <span className="font-bold text-indigo-900 text-lg tracking-tight">X-Insight</span>
+          </Link>
+          <Link
+            to="/"
+            className="text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors duration-200 flex items-center gap-1.5"
+          >
+            ← Back to Home
+          </Link>
         </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
+      </nav>
+
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 mt-16">
+        <div className="w-full max-w-md bg-white rounded-xl shadow-md border border-slate-100 p-6 sm:p-8 transition-all duration-300 hover:shadow-lg">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-indigo-900 tracking-tight">
+              Sign in to X-Insight
+            </h2>
+            <p className="mt-2 text-sm text-slate-500 font-medium">
+              Access your medical imaging analysis portal
+            </p>
+          </div>
+          
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            <div className="space-y-1.5">
               <label htmlFor="email-address" className="sr-only">
                 Email address
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-600">
+                  <Mail className="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                 </div>
                 <input
                   id="email-address"
@@ -79,20 +80,21 @@ export default function Login() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="appearance-none rounded-t-md relative block w-full px-12 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  className="block w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-indigo-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all duration-200 shadow-sm"
                   placeholder="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
             </div>
-            <div>
+
+            <div className="space-y-1.5">
               <label htmlFor="password" className="sr-only">
                 Password
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-600">
+                  <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                 </div>
                 <input
                   id="password"
@@ -100,95 +102,63 @@ export default function Login() {
                   type="password"
                   autoComplete="current-password"
                   required
-                  className="appearance-none relative block w-full px-12 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  className="block w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-indigo-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all duration-200 shadow-sm"
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
             </div>
-          </div>
 
-          <div>
-            <label className="text-sm font-medium text-gray-700 mb-3 block">
-              Select Account Type
-            </label>
-            <div className="grid grid-cols-3 gap-3">
-              {(['patient', 'doctor', 'admin'] as const).map((roleOption) => (
-                <button
-                  key={roleOption}
-                  type="button"
-                  onClick={() => setRole(roleOption)}
-                  className={`p-3 rounded-lg border-2 text-sm font-medium capitalize transition-all duration-200 ${
-                    role === roleOption
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                  }`}
-                >
-                  {roleOption}
-                </button>
-              ))}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center shadow-sm font-medium">
+                {error}
+              </div>
+            )}
+
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="group relative w-full flex justify-center items-center py-3 px-4 rounded-lg text-white bg-blue-600 hover:bg-blue-700 font-bold shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 focus:ring-offset-white transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isLoading ? 'Signing in...' : 'Sign in'}
+              </button>
             </div>
-          </div>
+          </form>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-            >
-              {isLoading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </div>
-        </form>
-
-        <div className="mt-8">
-          <div className="relative">
+          <div className="mt-8 relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+              <div className="w-full border-t border-slate-200" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-50 text-gray-500">Demo Credentials</span>
+              <span className="px-3 bg-white text-slate-500 font-semibold tracking-wide uppercase text-xs">Demo Access</span>
             </div>
           </div>
           
           <div className="mt-6 space-y-3">
-            {demoCredentials.map(({ role: demoRole, email: demoEmail, icon: Icon, color }) => (
+            {demoCredentials.map(({ role: demoRole, email: demoEmail, icon: Icon }) => (
               <button
                 key={demoRole}
                 onClick={() => {
                   setEmail(demoEmail);
                   setPassword('demo123');
-                  setRole(demoRole as 'patient' | 'doctor' | 'admin');
                 }}
-                className="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-all duration-200"
+                className="group w-full flex items-center justify-between p-3.5 border border-slate-200 rounded-xl hover:border-blue-300 hover:bg-slate-50 hover:shadow-sm transition-all duration-200 text-left"
               >
-                <div className="flex items-center space-x-3">
-                  <Icon className={`h-5 w-5 text-${color}-600`} />
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-gray-900 capitalize">{demoRole}</p>
-                    <p className="text-xs text-gray-500">{demoEmail}</p>
+                <div className="flex items-center space-x-4">
+                  <div className="p-2.5 rounded-lg text-blue-600 bg-blue-50 group-hover:bg-blue-100 transition-colors duration-200">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-indigo-900 capitalize group-hover:text-blue-700 transition-colors">{demoRole}</p>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">{demoEmail}</p>
                   </div>
                 </div>
-                <span className="text-xs text-gray-400">Click to use</span>
+                <span className="text-xs text-slate-400 group-hover:text-blue-600 transition-colors font-medium">Click to use</span>
               </button>
             ))}
           </div>
-        </div>
-
-        <div className="text-center">
-          <Link
-            to="/"
-            className="text-blue-600 hover:text-blue-500 text-sm font-medium transition-colors duration-200"
-          >
-            ← Back to Home
-          </Link>
         </div>
       </div>
     </div>
