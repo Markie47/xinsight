@@ -15,7 +15,7 @@ export default function History() {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Scan Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Report</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
               </tr>
             </thead>
@@ -24,7 +24,7 @@ export default function History() {
               <tr>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Oct 24, 2026</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Chest X-Ray</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium">Completed</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-semibold">View report</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 hover:underline cursor-pointer">View Report</td>
               </tr>
             </tbody>

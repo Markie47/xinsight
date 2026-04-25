@@ -17,15 +17,10 @@ export default function Login() {
     setError('');
 
     try {
-      const success = await login(email, password); 
-      
-      if (success) {
-        navigate('/dashboard');
-      } else {
-        setError('Invalid credentials. Please try again.');
-      }
+      await login(email.trim(), password);
+      navigate('/history');
     } catch (err) {
-      setError('Login failed. Please try again.');
+      setError('Invalid login credentials. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -45,12 +40,20 @@ export default function Login() {
             </div>
             <span className="font-bold text-indigo-900 text-lg tracking-tight">X-Insight</span>
           </Link>
-          <Link
-            to="/"
-            className="text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors duration-200 flex items-center gap-1.5"
-          >
-            ← Back to Home
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              to="/signup"
+              className="text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors duration-200"
+            >
+              Create account
+            </Link>
+            <Link
+              to="/"
+              className="text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors duration-200 flex items-center gap-1.5"
+            >
+              ← Back to Home
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -159,6 +162,13 @@ export default function Login() {
               </button>
             ))}
           </div>
+
+          <p className="mt-6 text-center text-sm text-slate-500">
+            New to X-Insight?{' '}
+            <Link to="/signup" className="text-blue-600 font-semibold hover:text-blue-700">
+              Create an account
+            </Link>
+          </p>
         </div>
       </div>
     </div>
