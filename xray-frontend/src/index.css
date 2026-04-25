@@ -9,9 +9,41 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: #f8fafc;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+@media print {
+  body {
+    background: white;
+    color: #111827;
+  }
+
+  nav,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+
+  .printable {
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .printable *,
+  .printable h1,
+  .printable h2,
+  .printable h3,
+  .printable p,
+  .printable span {
+    color: #111827 !important;
+  }
+
+  @page {
+    margin: 20mm;
+  }
 }

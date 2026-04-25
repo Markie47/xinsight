@@ -11,6 +11,9 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
+import ReportDownloader from '../components/ReportDownloader';
 
 // --- 1. INTERFACES ---
 interface FlaggedCondition {
@@ -39,8 +42,15 @@ export default function Upload() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
+  const [showReportPreview, setShowReportPreview] = useState(false);
+  const [uploadingReport, setUploadingReport] = useState(false);
+  const [downloadStatus, setDownloadStatus] = useState<string | null>(null);
+  const [historyStatus, setHistoryStatus] = useState<string | null>(null);
+  const [historyRecordId, setHistoryRecordId] = useState<string | null>(null);
+  const [historyPatientId, setHistoryPatientId] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -89,19 +99,187 @@ export default function Upload() {
     const formData = new FormData();
     formData.append('file', uploadedFile);
 
+    const mockAnalysis: AnalysisResponse = {
+      patient_status: 'Abnormal',
+      flagged_conditions: [
+        { condition: 'Pulmonary opacity', confidence: '92%', probability: 0.92 },
+        { condition: 'Pleural effusion', confidence: '85%', probability: 0.85 },
+      ],
+      medical_validation: {
+        status: 'Validated',
+        match_category: 'High confidence',
+        semantic_score: 0.96,
+      },
+      heatmaps: {
+        'AI Heatmap': previewUrl || '',
+      },
+      report_text: `## Report Summary\n\n- AI detected regions of consolidation and pleural changes.\n- The scan is consistent with possible early-stage pneumonia.\n- Recommend follow-up imaging and clinician review.\n\n### Key Observations\n\n1. Diffuse opacities in the lower lung zones.\n2. Mild pleural thickening around the left lung base.\n3. No acute fracture detected.\n\n### Suggested next steps\n\n- Correlate with clinical symptoms and oxygen saturation.\n- Review with a radiologist for final diagnosis.\n- Consider blood work and repeat X-ray in 48 hours.\n`,
+      scan_type_detected: 'chest',
+    };
+
     try {
-      // Hit the Gatekeeper endpoint
       const endpoint = `http://127.0.0.1:8000/smart-predict`;
       const response = await axios.post(endpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setAnalysis(response.data);
+      if (user) {
+        await saveHistoryDraft(response.data);
+      }
     } catch (err) {
-      console.error("Analysis failed:", err);
-      setError(`Analysis failed. Please ensure the backend is running.`);
+      console.warn('Backend unavailable, using mock analysis data.', err);
+      setAnalysis(mockAnalysis);
+      setError('Backend unavailable. Displaying a mock report for demo purposes.');
     } finally {
       setIsAnalyzing(false);
+      setShowReportPreview(false);
     }
+  };
+
+  const getOverallConfidence = (analysisData?: AnalysisResponse) => {
+    const data = analysisData || analysis;
+    if (!data) return 'N/A';
+    const bestProbability = data.flagged_conditions.reduce((max, item) => Math.max(max, item.probability), 0);
+    return `${Math.round((bestProbability || data.medical_validation.semantic_score || 0) * 100)}%`;
+  };
+
+  const saveHistoryDraft = async (analysisData: AnalysisResponse) => {
+    if (!user || !supabase) {
+      setHistoryStatus('History draft not saved: missing user or Supabase connection.');
+      return null;
+    }
+
+    const patientName = user.name || user.email?.split('@')[0] || 'X-Insight Patient';
+    const patientId = historyPatientId || `PID-${Date.now()}`;
+    setHistoryPatientId(patientId);
+
+    const historyPayload: Record<string, unknown> = {
+        user_id: user.id,
+        image_type: analysisData.scan_type_detected || 'unknown',
+        diagnosis_results: {
+          status: analysisData.patient_status || 'Unknown',
+          findings: analysisData.flagged_conditions,
+        },
+        overall_confidence: parseFloat(getOverallConfidence(analysisData)) || 0,
+        report_path: '',
+        extra_metadata: {
+          patientId,
+          patientName,
+          reportText: analysisData.report_text || '',
+          status: analysisData.patient_status || 'Unknown',
+          confidence: getOverallConfidence(analysisData),
+          scanType: analysisData.scan_type_detected || 'unknown',
+          isDraft: true,
+        },
+      };
+
+    const { data, error } = await supabase
+      .from('history')
+      .insert([historyPayload])
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Failed to save history draft', error);
+      setHistoryStatus(`History draft failed: ${error.message}`);
+      return null;
+    }
+
+    setHistoryRecordId(data?.id ?? null);
+    setHistoryStatus('History draft saved. Report will update after download.');
+    return data?.id ?? null;
+  };
+
+  const handleSavedReport = async (pdfBlob: Blob, filename: string) => {
+    if (!user || !supabase) {
+      const reason = !user ? 'User session not available yet.' : 'Supabase client is not configured.';
+      setDownloadStatus(`Report downloaded locally, but cannot persist to history: ${reason}`);
+      return;
+    }
+
+    setUploadingReport(true);
+    setDownloadStatus('Saving report to Supabase...');
+
+    const storagePath = `${user.id}/${Date.now()}_${filename}`;
+
+    console.log('PDF blob size (bytes):', pdfBlob.size);
+    if (pdfBlob.size > 50 * 1024 * 1024) {
+      setDownloadStatus('Downloaded locally, but failed to save report to Supabase storage: PDF is too large for Supabase upload.');
+      setUploadingReport(false);
+      return;
+    }
+
+    const { error: storageError } = await supabase.storage
+      .from('reports')
+      .upload(storagePath, pdfBlob, {
+        cacheControl: '3600',
+        upsert: true,
+        contentType: 'application/pdf',
+      });
+
+    if (storageError) {
+      console.error('Failed to save report in Supabase storage', storageError);
+      setDownloadStatus(`Downloaded locally, but failed to save report to Supabase storage: ${storageError.message}`);
+      setUploadingReport(false);
+      return;
+    }
+
+    if (historyRecordId) {
+      const { error: updateError } = await supabase
+        .from('history')
+        .update({
+          report_path: storagePath,
+          extra_metadata: {
+            patientId: historyPatientId,
+            patientName: user.name || user.email?.split('@')[0] || 'X-Insight Patient',
+            reportText: analysis?.report_text || '',
+            status: analysis?.patient_status || 'Unknown',
+            confidence: getOverallConfidence(),
+            scanType: analysis?.scan_type_detected || 'unknown',
+            isDraft: false,
+          },
+        })
+        .eq('id', historyRecordId);
+
+      if (updateError) {
+        console.error('Failed to update history record with storage path', updateError);
+        setDownloadStatus(`Report saved to storage, but failed to update history: ${updateError.message}`);
+        setUploadingReport(false);
+        return;
+      }
+    } else {
+      const { data: insertedData, error: dbError } = await supabase.from('history').insert([{
+        user_id: user.id,
+        image_type: analysis?.scan_type_detected || 'unknown',
+        diagnosis_results: {
+          status: analysis?.patient_status || 'Unknown',
+          findings: analysis?.flagged_conditions || [],
+        },
+        overall_confidence: parseFloat(getOverallConfidence()) || 0,
+        report_path: storagePath,
+        extra_metadata: {
+          patientId: historyPatientId,
+          patientName: user.name || user.email?.split('@')[0] || 'X-Insight Patient',
+          reportText: analysis?.report_text || '',
+          status: analysis?.patient_status || 'Unknown',
+          confidence: getOverallConfidence(),
+          scanType: analysis?.scan_type_detected || 'unknown',
+          isDraft: false,
+        },
+      }]).select('id').single();
+
+      if (dbError) {
+        console.error('Failed to save report record in Supabase database', dbError);
+        setDownloadStatus(`Report saved to storage, but failed to record history: ${dbError.message}`);
+        setUploadingReport(false);
+        return;
+      }
+      setHistoryRecordId(insertedData?.id ?? null);
+    }
+
+    setDownloadStatus('Report saved to Supabase storage and patient history.');
+    setHistoryStatus('Report stored in patient history and available on the dashboard.');
+    setUploadingReport(false);
   };
 
   const clearUpload = () => {
@@ -109,10 +287,11 @@ export default function Upload() {
     setPreviewUrl(null);
     setAnalysis(null);
     setError(null);
+    setDownloadStatus(null);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
   };
 
-  const isAbnormal = analysis?.patient_status === "Abnormal";
+  const isAbnormal = analysis?.patient_status === 'Abnormal';
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -202,8 +381,8 @@ export default function Upload() {
                       {Object.entries(analysis.heatmaps).map(([name, b64], idx) => (
                         <div key={idx} className="bg-gray-50 p-4 rounded-xl border">
                           <span className="block text-center text-xs font-black text-gray-500 mb-3 uppercase tracking-widest">{name}</span>
-                          <img 
-                            src={b64.startsWith('data:') ? b64 : `data:image/png;base64,${b64}`} 
+                              <img 
+                            src={b64.startsWith('data:') ? b64 : b64} 
                             alt={name} 
                             className="w-full rounded-lg shadow-sm bg-black" 
                           />
@@ -271,6 +450,41 @@ export default function Upload() {
                     </ReactMarkdown>
                   </div>
                 </div>
+
+                <button
+                  onClick={() => setShowReportPreview((prev) => !prev)}
+                  className="w-full inline-flex justify-center rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-indigo-700"
+                >
+                  {showReportPreview ? 'Hide Report Preview' : 'Preview Report'}
+                </button>
+
+                {showReportPreview && (
+                  <div className="mt-8">
+                    <ReportDownloader
+                      patientName={user?.name || 'John Doe'}
+                      patientGender="Not specified"
+                      patientId={historyPatientId || user?.id || 'PID-2026-001'}
+                      reportDate={new Date().toLocaleDateString()}
+                      scanType={analysis.scan_type_detected || 'Chest'}
+                      status={analysis.patient_status || 'Unknown'}
+                      diagnosisResult={analysis.patient_status || 'No abnormality detected'}
+                      confidence={getOverallConfidence()}
+                      heatmapUrl={previewUrl || ''}
+                      finalDiagnosis={analysis.report_text.replace(/##\s+/g, '').trim() || 'No findings available.'}
+                      onDownload={handleSavedReport}
+                    />
+                  </div>
+                )}
+                {downloadStatus && (
+                  <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
+                    {uploadingReport ? 'Saving report to Supabase...' : downloadStatus}
+                  </div>
+                )}
+                {historyStatus && (
+                  <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-800">
+                    {historyStatus}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-24 text-gray-400 italic">

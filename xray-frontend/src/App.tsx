@@ -1,18 +1,19 @@
-import React from 'react';      
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Layout/Navbar';
-import Footer from './components/Layout/Footer'
+import Footer from './components/Layout/Footer';
 import Home from './pages/Home';
 import Upload from './pages/Upload';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import Information from './pages/Information';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
 import DataSecurity from './pages/DataSecurity';
 import HIPAA from './pages/HIPAA';
 import Dashboard from './components/Dashboard';
-import History from './pages/History';
+import PatientProfile from './pages/PatientProfile';
 
 function App() {
   return (
@@ -25,13 +26,15 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/upload" element={<Upload />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
               <Route path="/information" element={<Information />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/data-security" element={<DataSecurity />} />
               <Route path="/hipaa" element={<HIPAA />} />
               <Route path="/history" element={<Dashboard />} />
-              <Route path="/history" element={<History />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/patient/:patientId" element={<PatientProfile />} />
             </Routes>
           </main>
           <Footer />
