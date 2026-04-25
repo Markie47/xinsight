@@ -34,7 +34,7 @@ interface AnalysisResponse {
   medical_validation: MedicalValidation;
   heatmaps: Record<string, string>;
   report_text: string;
-  scan_type_detected?: string; // Catch the Gatekeeper's routing decision
+  scan_type_detected?: string;
 }
 
 export default function Upload() {
@@ -47,7 +47,6 @@ export default function Upload() {
   const [downloadStatus, setDownloadStatus] = useState<string | null>(null);
   const [historyStatus, setHistoryStatus] = useState<string | null>(null);
   const [historyRecordId, setHistoryRecordId] = useState<string | null>(null);
-  const [historyPatientId, setHistoryPatientId] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
@@ -95,44 +94,32 @@ export default function Upload() {
     setIsAnalyzing(true);
     setAnalysis(null);
     setError(null);
+    setShowReportPreview(false);
+    setHistoryStatus(null);
+    setDownloadStatus(null);
     
     const formData = new FormData();
     formData.append('file', uploadedFile);
 
-    const mockAnalysis: AnalysisResponse = {
-      patient_status: 'Abnormal',
-      flagged_conditions: [
-        { condition: 'Pulmonary opacity', confidence: '92%', probability: 0.92 },
-        { condition: 'Pleural effusion', confidence: '85%', probability: 0.85 },
-      ],
-      medical_validation: {
-        status: 'Validated',
-        match_category: 'High confidence',
-        semantic_score: 0.96,
-      },
-      heatmaps: {
-        'AI Heatmap': previewUrl || '',
-      },
-      report_text: `## Report Summary\n\n- AI detected regions of consolidation and pleural changes.\n- The scan is consistent with possible early-stage pneumonia.\n- Recommend follow-up imaging and clinician review.\n\n### Key Observations\n\n1. Diffuse opacities in the lower lung zones.\n2. Mild pleural thickening around the left lung base.\n3. No acute fracture detected.\n\n### Suggested next steps\n\n- Correlate with clinical symptoms and oxygen saturation.\n- Review with a radiologist for final diagnosis.\n- Consider blood work and repeat X-ray in 48 hours.\n`,
-      scan_type_detected: 'chest',
-    };
-
     try {
       const endpoint = `http://127.0.0.1:8000/smart-predict`;
       const response = await axios.post(endpoint, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          'user-id': user?.id || '' 
+        },
       });
+      
       setAnalysis(response.data);
+      
       if (user) {
         await saveHistoryDraft(response.data);
       }
     } catch (err) {
-      console.warn('Backend unavailable, using mock analysis data.', err);
-      setAnalysis(mockAnalysis);
-      setError('Backend unavailable. Displaying a mock report for demo purposes.');
+      console.error("Analysis failed:", err);
+      setError(`Analysis failed. Please ensure the FastAPI backend is running.`);
     } finally {
       setIsAnalyzing(false);
-      setShowReportPreview(false);
     }
   };
 
@@ -149,29 +136,16 @@ export default function Upload() {
       return null;
     }
 
-    const patientName = user.name || user.email?.split('@')[0] || 'X-Insight Patient';
-    const patientId = historyPatientId || `PID-${Date.now()}`;
-    setHistoryPatientId(patientId);
-
-    const historyPayload: Record<string, unknown> = {
-        user_id: user.id,
-        image_type: analysisData.scan_type_detected || 'unknown',
-        diagnosis_results: {
-          status: analysisData.patient_status || 'Unknown',
-          findings: analysisData.flagged_conditions,
-        },
-        overall_confidence: parseFloat(getOverallConfidence(analysisData)) || 0,
-        report_path: '',
-        extra_metadata: {
-          patientId,
-          patientName,
-          reportText: analysisData.report_text || '',
-          status: analysisData.patient_status || 'Unknown',
-          confidence: getOverallConfidence(analysisData),
-          scanType: analysisData.scan_type_detected || 'unknown',
-          isDraft: true,
-        },
-      };
+    const historyPayload = {
+      user_id: user.id,
+      image_type: analysisData.scan_type_detected || 'unknown',
+      diagnosis_results: {
+        status: analysisData.patient_status || 'Unknown',
+        findings: analysisData.flagged_conditions,
+      },
+      overall_confidence: parseFloat(getOverallConfidence(analysisData)) || 0,
+      report_path: '',
+    };
 
     const { data, error } = await supabase
       .from('history')
@@ -202,7 +176,6 @@ export default function Upload() {
 
     const storagePath = `${user.id}/${Date.now()}_${filename}`;
 
-    console.log('PDF blob size (bytes):', pdfBlob.size);
     if (pdfBlob.size > 50 * 1024 * 1024) {
       setDownloadStatus('Downloaded locally, but failed to save report to Supabase storage: PDF is too large for Supabase upload.');
       setUploadingReport(false);
@@ -227,18 +200,7 @@ export default function Upload() {
     if (historyRecordId) {
       const { error: updateError } = await supabase
         .from('history')
-        .update({
-          report_path: storagePath,
-          extra_metadata: {
-            patientId: historyPatientId,
-            patientName: user.name || user.email?.split('@')[0] || 'X-Insight Patient',
-            reportText: analysis?.report_text || '',
-            status: analysis?.patient_status || 'Unknown',
-            confidence: getOverallConfidence(),
-            scanType: analysis?.scan_type_detected || 'unknown',
-            isDraft: false,
-          },
-        })
+        .update({ report_path: storagePath })
         .eq('id', historyRecordId);
 
       if (updateError) {
@@ -256,16 +218,7 @@ export default function Upload() {
           findings: analysis?.flagged_conditions || [],
         },
         overall_confidence: parseFloat(getOverallConfidence()) || 0,
-        report_path: storagePath,
-        extra_metadata: {
-          patientId: historyPatientId,
-          patientName: user.name || user.email?.split('@')[0] || 'X-Insight Patient',
-          reportText: analysis?.report_text || '',
-          status: analysis?.patient_status || 'Unknown',
-          confidence: getOverallConfidence(),
-          scanType: analysis?.scan_type_detected || 'unknown',
-          isDraft: false,
-        },
+        report_path: storagePath
       }]).select('id').single();
 
       if (dbError) {
@@ -288,16 +241,16 @@ export default function Upload() {
     setAnalysis(null);
     setError(null);
     setDownloadStatus(null);
+    setShowReportPreview(false);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
   };
 
   const isAbnormal = analysis?.patient_status === 'Abnormal';
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50 py-12 relative">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Header Section */}
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             X-Insight AI Diagnostic Suite
@@ -309,7 +262,6 @@ export default function Upload() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
-          {/* LEFT COLUMN: Upload & Heatmaps */}
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
               <UploadIcon className="h-6 w-6 text-blue-600" />
@@ -373,7 +325,6 @@ export default function Upload() {
                   </div>
                 )}
 
-                {/* Heatmaps: Fixed Base64 Prefixing logic */}
                 {analysis && Object.keys(analysis.heatmaps).length > 0 && (
                   <div className="pt-8 border-t border-gray-100">
                     <h3 className="text-lg font-bold text-gray-900 mb-6">Pathology Heatmaps</h3>
@@ -381,8 +332,8 @@ export default function Upload() {
                       {Object.entries(analysis.heatmaps).map(([name, b64], idx) => (
                         <div key={idx} className="bg-gray-50 p-4 rounded-xl border">
                           <span className="block text-center text-xs font-black text-gray-500 mb-3 uppercase tracking-widest">{name}</span>
-                              <img 
-                            src={b64.startsWith('data:') ? b64 : b64} 
+                          <img 
+                            src={b64.startsWith('data:') ? b64 : `data:image/png;base64,${b64}`} 
                             alt={name} 
                             className="w-full rounded-lg shadow-sm bg-black" 
                           />
@@ -395,7 +346,6 @@ export default function Upload() {
             )}
           </div>
 
-          {/* RIGHT COLUMN: Results & Reports */}
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 h-fit">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
               <CheckCircle className="h-6 w-6 text-green-600" />
@@ -414,7 +364,6 @@ export default function Upload() {
                   </div>
                 </div>
                 
-                {/* Fixed Dynamic Colors */}
                 <div className={`rounded-2xl p-6 border-2 ${
                   isAbnormal ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'
                 }`}>
@@ -452,29 +401,13 @@ export default function Upload() {
                 </div>
 
                 <button
-                  onClick={() => setShowReportPreview((prev) => !prev)}
-                  className="w-full inline-flex justify-center rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-indigo-700"
+                  onClick={() => setShowReportPreview(true)}
+                  className="w-full inline-flex justify-center items-center space-x-2 rounded-2xl bg-indigo-600 px-6 py-4 text-sm font-bold text-white shadow-lg transition hover:bg-indigo-700"
                 >
-                  {showReportPreview ? 'Hide Report Preview' : 'Preview Report'}
+                  <FileImage className="h-5 w-5" />
+                  <span>Generate & Preview Report</span>
                 </button>
-
-                {showReportPreview && (
-                  <div className="mt-8">
-                    <ReportDownloader
-                      patientName={user?.name || 'John Doe'}
-                      patientGender="Not specified"
-                      patientId={historyPatientId || user?.id || 'PID-2026-001'}
-                      reportDate={new Date().toLocaleDateString()}
-                      scanType={analysis.scan_type_detected || 'Chest'}
-                      status={analysis.patient_status || 'Unknown'}
-                      diagnosisResult={analysis.patient_status || 'No abnormality detected'}
-                      confidence={getOverallConfidence()}
-                      heatmapUrl={previewUrl || ''}
-                      finalDiagnosis={analysis.report_text.replace(/##\s+/g, '').trim() || 'No findings available.'}
-                      onDownload={handleSavedReport}
-                    />
-                  </div>
-                )}
+                
                 {downloadStatus && (
                   <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
                     {uploadingReport ? 'Saving report to Supabase...' : downloadStatus}
@@ -501,6 +434,53 @@ export default function Upload() {
           </div>
         </div>
       </div>
+
+      {showReportPreview && analysis && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 sm:p-6 overflow-hidden">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col relative animate-in fade-in zoom-in-95 duration-200">
+            
+            <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100 bg-gray-50/80 rounded-t-3xl">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center space-x-3">
+                <FileImage className="h-6 w-6 text-indigo-600" />
+                <span>Diagnostic Report Preview</span>
+              </h3>
+              <button 
+                onClick={() => setShowReportPreview(false)}
+                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                title="Close Preview"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-gray-100">
+              <div className="bg-white shadow-sm border border-gray-200 rounded-xl max-w-4xl mx-auto">
+                <ReportDownloader
+                  patientName={user?.name || user?.email?.split('@')[0] || 'X-Insight Patient'}
+                  patientGender="Not specified"
+                  patientId={user?.id || 'PID-2026-001'}
+                  reportDate={new Date().toLocaleDateString()}
+                  scanType={analysis.scan_type_detected || 'Bone / Chest'}
+                  status={analysis.patient_status || 'Unknown'}
+                  diagnosisResult={
+                    analysis.flagged_conditions.length > 0 
+                      ? analysis.flagged_conditions.map(c => c.condition).join(', ') 
+                      : 'No abnormality detected'
+                  }
+                  confidence={getOverallConfidence()}
+                  originalImage={previewUrl || ''}
+                  heatmaps={analysis.heatmaps}
+                  finalDiagnosis={analysis.report_text.replace(/##\s+/g, '').trim() || 'No findings available.'}
+                  onDownload={async (blob, filename) => {
+                    await handleSavedReport(blob, filename);
+                    setShowReportPreview(false); 
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

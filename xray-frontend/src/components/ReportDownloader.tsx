@@ -11,7 +11,8 @@ export interface ReportProps {
   diagnosisResult: string;
   confidence: string;
   status: string;
-  heatmapUrl: string;
+  originalImage: string;            // 🟢 Replaced heatmapUrl
+  heatmaps: Record<string, string>; // 🟢 Added heatmaps dictionary
   finalDiagnosis: string;
   onDownload?: (pdfBlob: Blob, filename: string) => Promise<void>;
 }
@@ -90,19 +91,39 @@ export default function ReportDownloader(props: ReportProps) {
         </div>
 
         <div className="mb-8">
-          <h2 className="text-xl font-bold border-b-2 border-gray-200 mb-4 text-gray-800 pb-1">Diagnostic Imaging (AI Heatmap)</h2>
-          <div className="mt-4 flex justify-center bg-gray-900 p-4 rounded shadow-inner">
-            {props.heatmapUrl ? (
-              <img
-                src={props.heatmapUrl}
-                alt="AI Generated Heatmap"
-                className="max-w-[450px] max-h-[500px] object-contain rounded"
-                crossOrigin="anonymous"
-              />
-            ) : (
-              <div className="h-[300px] flex items-center justify-center text-gray-400 italic">
-                No imaging provided for this report.
-              </div>
+          <h2 className="text-xl font-bold border-b-2 border-gray-200 mb-4 text-gray-800 pb-1">Diagnostic Imaging</h2>
+          <div className="mt-4 flex flex-wrap justify-center gap-6 bg-gray-900 p-6 rounded shadow-inner">
+            
+            {/* Original Image */}
+            <div className="flex flex-col items-center">
+              <p className="text-xs font-bold text-gray-300 mb-2 uppercase tracking-wider">Original X-Ray</p>
+              {props.originalImage ? (
+                <img
+                  src={props.originalImage}
+                  alt="Original Scan"
+                  className="max-w-[280px] max-h-[300px] object-contain rounded border border-gray-700 bg-black"
+                  crossOrigin="anonymous"
+                />
+              ) : (
+                <div className="w-[280px] h-[300px] flex items-center justify-center border border-gray-700 bg-black text-gray-500 italic">
+                  No image provided.
+                </div>
+              )}
+            </div>
+
+            {/* Heatmaps */}
+            {props.heatmaps && Object.keys(props.heatmaps).length > 0 && (
+              Object.entries(props.heatmaps).map(([disease, b64], idx) => (
+                <div key={idx} className="flex flex-col items-center">
+                  <p className="text-xs font-bold text-gray-300 mb-2 uppercase tracking-wider">{disease} Heatmap</p>
+                  <img
+                    src={b64.startsWith('data:') ? b64 : `data:image/png;base64,${b64}`}
+                    alt={`${disease} Heatmap`}
+                    className="max-w-[280px] max-h-[300px] object-contain rounded border border-gray-700 bg-black"
+                    crossOrigin="anonymous"
+                  />
+                </div>
+              ))
             )}
           </div>
         </div>

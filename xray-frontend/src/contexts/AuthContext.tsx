@@ -34,9 +34,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // 🟢 FIXED: Fetching "full_name" to match your actual Supabase profiles schema
     const { data, error } = await supabase
       .from('profiles')
-      .select('id,email,name,avatar_url')
+      .select('id,email,full_name') 
       .eq('id', authUserId)
       .single();
 
@@ -44,8 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser({
         id: data.id,
         email: data.email,
-        name: data.name || authEmail || 'X-Insight User',
-        avatar: data.avatar_url || ''
+        name: data.full_name || authEmail || 'X-Insight User', // Mapping full_name back to frontend User object
+        avatar: '' 
       });
       return;
     }
@@ -107,13 +108,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) {
       throw new Error('Supabase client is not initialized. Please configure REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY.');
     }
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    
+    // 🟢 FIXED: Pass the name inside user_metadata so the SQL trigger can catch it
+    const { data, error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        data: {
+          full_name: name, 
+        }
+      }
+    });
+    
     if (error) {
       throw error;
     }
 
     if (data.user) {
-      await supabase.from('profiles').upsert({ id: data.user.id, email, name });
+      // 🟢 FIXED: Removed the manual manual .upsert() into 'profiles'. 
+      // The SQL Trigger you created handles this entirely automatically now!
       return true;
     }
 

@@ -57,7 +57,7 @@ export default function Signup() {
       <div className="flex-1 flex items-center justify-center p-4 sm:p-6 mt-16">
         <div className="w-full max-w-md bg-white rounded-xl shadow-md border border-slate-100 p-6 sm:p-8 transition-all duration-300 hover:shadow-lg">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-indigo-900 tracking-tight">Create your doctor account</h2>
+            <h2 className="text-2xl font-bold text-indigo-900 tracking-tight">Create your user account</h2>
             <p className="mt-2 text-sm text-slate-500 font-medium">Start saving X-ray reports, history, and drafts securely.</p>
           </div>
 
