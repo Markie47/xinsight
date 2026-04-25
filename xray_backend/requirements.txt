@@ -6,6 +6,7 @@ python-dotenv
 
 # Machine Learning & Vision
 tensorflow
+tensorflow keras
 torch
 torchvision
 torchaudio
